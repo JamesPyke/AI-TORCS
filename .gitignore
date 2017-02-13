@@ -17,3 +17,9 @@ src/tags
 *.so
 *.spec
 *.swp
+runtime/
+runtimed/
+Release/
+Debug/
+TORCS.opensdf
+TORCS.sdf

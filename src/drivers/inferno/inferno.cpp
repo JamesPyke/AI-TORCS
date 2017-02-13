@@ -181,7 +181,7 @@ static void drive(int index, tCarElt* car, tSituation *situation)
 		const int cam_height = 480;
 		unsigned char cam_data[3 * cam_width * cam_height];
 		glReadPixels(0, 0, cam_width, cam_height, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)cam_data);
-		GfImgWritePng(cam_data, "/tmp/foo.png", cam_width, cam_height);
+		//GfImgWritePng(cam_data, "/tmp/foo.png", cam_width, cam_height);
 		printf("Screenshot written to /tmp/foo.png\n");
 	}
 
