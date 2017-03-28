@@ -1,19 +1,3 @@
-/***************************************************************************
-
-    file                 : robot_base.cpp
-    created              : Mon 13 Feb 11:40:23 GMT 2017
-    copyright            : (C) 2002 Author
-
- ***************************************************************************/
-
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
 
 #ifdef _WIN32
 #include <windows.h>
@@ -31,15 +15,9 @@
 #include <robottools.h>
 #include <robot.h>
 
-static tTrack	*curTrack;
-
-static void initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s); 
-static void newrace(int index, tCarElt* car, tSituation *s); 
 static void drive(int index, tCarElt* car, tSituation *s); 
-static void endrace(int index, tCarElt *car, tSituation *s);
 static void shutdown(int index);
 static int  InitFuncPt(int index, void *pt); 
-
 
 /* 
  * Module entry point  
@@ -58,6 +36,26 @@ robot_base(tModInfo *modInfo)
     return 0; 
 } 
 
+/* Called for every track change or new race. */
+static void
+initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s)
+{
+	static tTrack	*curTrack;
+	curTrack = track;
+	*carParmHandle = NULL;
+}
+
+static void
+newRace(int index, tCarElt* car, tSituation *s)
+{
+}
+/* Start a new race. */
+static void
+endRace(int index, tCarElt* car, tSituation *s)
+{
+}
+
+
 /* Module interface initialization. */
 static int 
 InitFuncPt(int index, void *pt) 
@@ -66,49 +64,79 @@ InitFuncPt(int index, void *pt)
 
     itf->rbNewTrack = initTrack; /* Give the robot the track view called */ 
 				 /* for every track change or new race */ 
-    itf->rbNewRace  = newrace; 	 /* Start a new race */
+    itf->rbNewRace  = newRace; 	 /* Start a new race */
     itf->rbDrive    = drive;	 /* Drive during race */
     itf->rbPitCmd   = NULL;
-    itf->rbEndRace  = endrace;	 /* End of the current race */
+    itf->rbEndRace  = endRace;	 /* End of the current race */
     itf->rbShutdown = shutdown;	 /* Called before the module is unloaded */
     itf->index      = index; 	 /* Index used if multiple interfaces */
     return 0; 
 } 
 
-/* Called for every track change or new race. */
-static void  
-initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s) 
-{ 
-    curTrack = track;
-    *carParmHandle = NULL; 
-} 
+static void endRace(int index, tCarElt *car, tSituation *s);
+static void newRace(int index, tCarElt* car, tSituation *s);
+static void initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s);
 
-/* Start a new race. */
-static void  
-newrace(int index, tCarElt* car, tSituation *s) 
-{ 
-} 
+bool isStuck(tCarElt* car)
+{
+	static int stuck = 0;
+
+	int maxUnstuckCount;
+	int index;
+
+	static  float maxUnstuckAngle = 30.0 / 180.0*PI;
+	static  float unstuckTimeLimit = 2.0;
+
+	maxUnstuckCount = int(maxUnstuckAngle / RCM_MAX_DT_ROBOTS);
+
+	float angle = RtTrackSideTgAngleL(&(car->_trkPos)) - car->_yaw;
+	NORM0_2PI(angle);
+	if (fabs(angle) < 30.0 / 180.0*PI)
+	{
+		stuck = 0;
+		return false;
+	}
+	if (stuck < 100)
+	{
+		stuck++;
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
 
 /* Drive during race. */
+
 static void  
 drive(int index, tCarElt* car, tSituation *s) 
 { 
-    memset((void *)&car->ctrl, 0, sizeof(tCarCtrl)); 
-    car->ctrl.brakeCmd = 1.0; /* all brakes on ... */ 
-    /*  
-     * add the driving code here to modify the 
-     * car->_steerCmd 
-     * car->_accelCmd 
-     * car->_brakeCmd 
-     * car->_gearCmd 
-     * car->_clutchCmd 
-     */ 
-}
+	system("cls");
+		float angle;
+		const float SC = 1.0;
+		memset(&car->ctrl, 0, sizeof(tCarCtrl));
 
-/* End of the current race */
-static void
-endrace(int index, tCarElt *car, tSituation *s)
-{
+		if (isStuck(car))
+		{
+			angle = -RtTrackSideTgAngleL(&(car->_trkPos)) + car->_yaw;
+			NORM0_2PI(angle);
+			car->ctrl.steer = angle / car->_steerLock;
+			car->ctrl.gear = -1;
+			car->ctrl.accelCmd = 0.3;
+			car->ctrl.brakeCmd = 0.0;
+		}
+		else
+		{
+			angle = RtTrackSideTgAngleL(&(car->_trkPos)) - car->_yaw;
+			NORM_PI_PI(angle); // put the angle back in the range from -PI to PI
+			angle -= SC*car->_trkPos.toMiddle / car->_trkPos.seg->width;
+			// set up the values to return
+			car->ctrl.steer = angle / car->_steerLock;
+			car->ctrl.gear = 1; // first gear
+			car->ctrl.accelCmd = 0.3; // 30% accelerator pedal
+			car->ctrl.brakeCmd = 0.0; // no brakes
+		}
 }
 
 /* Called before the module is unloaded */
@@ -116,4 +144,11 @@ static void
 shutdown(int index)
 {
 }
+
+
+
+
+
+
+
 

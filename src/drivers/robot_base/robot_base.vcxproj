@@ -179,8 +179,6 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\..\libs\robottools\robottools.vcxproj">
       <Project>{eacc0870-5315-41f9-ae61-b93c77334eae}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
