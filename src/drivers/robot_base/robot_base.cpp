@@ -15,9 +15,17 @@
 #include "driver.h"
 
 #define BUFSIZE 20
-#define NBBOTS 3
+#define NBBOTS 10
 
-static char *botname[NBBOTS];
+static const char* botname[NBBOTS] = {
+	"Geoff 1", "Geoff 2", "Geoff 3", "Geoff 4", "Geoff 5",
+	"Geoff 6", "Geoff 7", "Geoff 8", "Geoff 9", "Geoff 10"
+};
+
+static const char* botdesc[NBBOTS] = {
+	"Geoff 1", "Geoff 2", "Geoff 3", "Geoff 4", "Geoff 5",
+	"Geoff 6", "Geoff 7", "Geoff 8", "Geoff 9", "Geoff 10"
+};
 static Driver *driver[NBBOTS];
 
 static void initTrack(int index, tTrack* track, void *carHandle, void **carParmHandle, tSituation *s);
@@ -35,12 +43,11 @@ extern "C" int robot_base(tModInfo *modInfo)
 	int i;
 
 	/* clear all structures */
-	memset(modInfo, 0, 10 * sizeof(tModInfo));
+	memset(modInfo, 0, NBBOTS * sizeof(tModInfo));
 
 	for (i = 0; i < NBBOTS; i++) {
-		botname[i] = strdup(buffer);      /* store pointer to string */
-		modInfo[i].name = botname[i];  /* name of the module (short) */
-		modInfo[i].desc = "";          /* description of the module (can be long) */
+		modInfo[i].name = strdup(botname[i]);  /* name of the module (short) */
+		modInfo[i].desc = strdup(botdesc[i]);          /* description of the module (can be long) */
 		modInfo[i].fctInit = InitFuncPt;  /* init function */
 		modInfo[i].gfId = ROB_IDENT;   /* supported framework version */
 		modInfo[i].index = i;           /* indices from 0 to 9 */
@@ -98,7 +105,6 @@ static void endRace(int index, tCarElt *car, tSituation *s)
 /* Called before the module is unloaded */
 static void shutdown(int index)
 {
-	free(botname[index]);
 	delete driver[index];
 }
 

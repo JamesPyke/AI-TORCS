@@ -28,6 +28,7 @@ public:
 	float getDisToSegEnd();
 	float getBrake();
 	float filterABS(float brake);
+	float filterTrk(float accel);
 
 	int getGear();
 
@@ -47,8 +48,7 @@ public:
 
 	void initTCLFilter();
 	float(Driver::*GET_DRIVEN_WHEEL_SPEED)();
-	static const float TCLSlip;
-	static const float TCLMinSpeed;
+
 
 private:
 
@@ -72,6 +72,10 @@ private:
 	static const float shiftMargin;
 	static const float ABSSlip;
 	static const float ABSMinSpeed;
+
+	static const float TCLSlip;
+	static const float TCLMinSpeed;
+	static const float witdthDiv;
 
 	tTrack* track;
 };
